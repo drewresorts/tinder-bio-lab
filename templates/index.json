@@ -1,19 +1,75 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "tv_static": {
       "type": "tv-static-morph",
       "blocks": {
+        "image_KgQzAj": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/Main_589fc064-24a2-4236-9eaf-13b2bd35d21d.jpg"
+          }
+        },
+        "image_yBw7E8": {
+          "type": "image",
+          "settings": {}
+        },
         "image_1": {
           "type": "image",
           "settings": {}
         }
       },
       "block_order": [
+        "image_KgQzAj",
+        "image_yBw7E8",
         "image_1"
       ],
       "settings": {
         "height": 100,
-        "height_mobile": 80
+        "height_mobile": 80,
+        "full_width": true,
+        "background_color": "#000000",
+        "cell_size": 2,
+        "saturation": 100,
+        "flicker_fps": 38,
+        "crt": true,
+        "fallback_text": "",
+        "image_scale": 60,
+        "image_scale_mobile": 85,
+        "dot_spacing": 5,
+        "dot_size": 95,
+        "dot_angle": 45,
+        "dot_shape": "round",
+        "tone": "darkness",
+        "color_source": "static",
+        "custom_color": "#ffffff",
+        "grain": 20,
+        "background_static": 15,
+        "playback": "loop",
+        "hold_static": 1.5,
+        "morph_duration": 2.4,
+        "hold_image": 4,
+        "pattern": "random",
+        "stagger": 60,
+        "swirl": 30,
+        "travel": 45,
+        "pointer": true,
+        "pointer_radius": 120,
+        "heading": "",
+        "heading_size": "medium",
+        "text": "",
+        "button_label": "",
+        "button_link": "",
+        "content_position": "bottom-center",
+        "text_color": "#ffffff"
       }
     },
     "image_banner": {
@@ -45,33 +101,32 @@
       "settings": {
         "image_overlay_opacity": 40,
         "image_height": "large",
-        "desktop_content_position": "bottom-center",
-        "show_text_box": false,
         "image_behavior": "none",
+        "desktop_content_position": "bottom-center",
         "desktop_content_alignment": "center",
+        "show_text_box": false,
         "color_scheme": "scheme-3",
-        "mobile_content_alignment": "center",
         "stack_images_on_mobile": false,
+        "mobile_content_alignment": "center",
         "show_text_below": false
       }
     },
     "featured_collection": {
       "type": "featured-collection",
       "settings": {
+        "collection": "all",
+        "products_to_show": 8,
         "title": "Featured products",
         "heading_size": "h2",
         "description": "",
         "show_description": false,
         "description_style": "body",
-        "collection": "all",
-        "products_to_show": 8,
         "columns_desktop": 4,
-        "color_scheme": "scheme-1",
+        "enable_desktop_slider": false,
         "full_width": false,
         "show_view_all": true,
         "view_all_style": "solid",
-        "enable_desktop_slider": false,
-        "swipe_on_mobile": false,
+        "color_scheme": "scheme-1",
         "image_ratio": "adapt",
         "image_shape": "default",
         "show_secondary_image": true,
@@ -79,6 +134,7 @@
         "show_rating": false,
         "quick_add": "none",
         "columns_mobile": "2",
+        "swipe_on_mobile": false,
         "padding_top": 44,
         "padding_bottom": 36
       }
