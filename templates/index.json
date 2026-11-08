@@ -1,5 +1,21 @@
 {
   "sections": {
+    "tv_static": {
+      "type": "tv-static-morph",
+      "blocks": {
+        "image_1": {
+          "type": "image",
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "image_1"
+      ],
+      "settings": {
+        "height": 100,
+        "height_mobile": 80
+      }
+    },
     "image_banner": {
       "type": "image-banner",
       "blocks": {
@@ -69,6 +85,7 @@
     }
   },
   "order": [
+    "tv_static",
     "image_banner",
     "featured_collection"
   ]

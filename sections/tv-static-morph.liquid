@@ -1,0 +1,606 @@
+{%- comment -%}
+  TV static morph
+  Full-bleed RGB TV static whose particles fly together into halftone versions of
+  uploaded transparent PNGs / logos, hold, then scatter back into noise.
+  Engine: assets/tv-static-morph.js (dependency-free WebGL custom element).
+{%- endcomment -%}
+
+{%- liquid
+  assign s = section.settings
+  assign has_content = false
+  if s.heading != blank or s.text != blank or s.button_label != blank
+    assign has_content = true
+  endif
+  assign fallback_text = s.fallback_text | default: shop.name
+-%}
+
+<div
+  class="tsm-section{% unless s.full_width %} page-width{% endunless %}"
+  style="--tsm-h: {{ s.height }}; --tsm-h-mobile: {{ s.height_mobile }}; --tsm-text: {{ s.text_color }};"
+>
+  <tv-static-morph
+    class="tsm-section__screen"
+    data-cell-size="{{ s.cell_size }}"
+    data-saturation="{{ s.saturation }}"
+    data-flicker-fps="{{ s.flicker_fps }}"
+    data-crt="{{ s.crt }}"
+    data-background="{{ s.background_color }}"
+    data-image-scale="{{ s.image_scale }}"
+    data-image-scale-mobile="{{ s.image_scale_mobile }}"
+    data-dot-spacing="{{ s.dot_spacing }}"
+    data-dot-size="{{ s.dot_size }}"
+    data-dot-angle="{{ s.dot_angle }}"
+    data-dot-shape="{{ s.dot_shape }}"
+    data-tone="{{ s.tone }}"
+    data-color-source="{{ s.color_source }}"
+    data-custom-color="{{ s.custom_color }}"
+    data-grain="{{ s.grain }}"
+    data-background-static="{{ s.background_static }}"
+    data-playback="{{ s.playback }}"
+    data-hold-static="{{ s.hold_static }}"
+    data-morph-duration="{{ s.morph_duration }}"
+    data-hold-image="{{ s.hold_image }}"
+    data-pattern="{{ s.pattern }}"
+    data-stagger="{{ s.stagger }}"
+    data-swirl="{{ s.swirl }}"
+    data-travel="{{ s.travel }}"
+    data-pointer="{{ s.pointer }}"
+    data-pointer-radius="{{ s.pointer_radius }}"
+    data-fallback-text="{{ fallback_text | escape }}"
+    style="background-color: {{ s.background_color }};"
+  >
+    {%- for block in section.blocks -%}
+      {%- if block.settings.image != blank -%}
+        {%- assign img = block.settings.image -%}
+        <img
+          data-tsm-source
+          src="{{ img | image_url: width: 1600 }}"
+          alt="{{ img.alt | escape }}"
+          width="{{ img.width }}"
+          height="{{ img.height }}"
+          crossorigin="anonymous"
+          loading="eager"
+          {{ block.shopify_attributes }}
+        >
+      {%- endif -%}
+    {%- endfor -%}
+  </tv-static-morph>
+
+  {%- if has_content -%}
+    <div class="tsm-section__content tsm-section__content--{{ s.content_position }}">
+      <div class="tsm-section__inner">
+        {%- if s.heading != blank -%}
+          <h2 class="tsm-section__heading tsm-section__heading--{{ s.heading_size }}">{{ s.heading }}</h2>
+        {%- endif -%}
+        {%- if s.text != blank -%}
+          <div class="tsm-section__text">{{ s.text }}</div>
+        {%- endif -%}
+        {%- if s.button_label != blank -%}
+          <a
+            class="button tsm-section__button"
+            {% if s.button_link != blank %}
+              href="{{ s.button_link }}"
+            {% else %}
+              role="link" aria-disabled="true"
+            {% endif %}
+          >
+            {{- s.button_label | escape -}}
+          </a>
+        {%- endif -%}
+      </div>
+    </div>
+  {%- endif -%}
+</div>
+
+<script src="{{ 'tv-static-morph.js' | asset_url }}" defer="defer"></script>
+
+{% stylesheet %}
+  .tsm-section {
+    position: relative;
+    height: calc(var(--tsm-h, 80) * 1vh);
+    height: calc(var(--tsm-h, 80) * 1svh);
+    min-height: 320px;
+    overflow: hidden;
+  }
+
+  @media screen and (max-width: 749px) {
+    .tsm-section {
+      height: calc(var(--tsm-h-mobile, 70) * 1vh);
+      height: calc(var(--tsm-h-mobile, 70) * 1svh);
+    }
+  }
+
+  .tsm-section__screen {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .tsm-section__content {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    padding: clamp(1.6rem, 4vw, 4.8rem);
+    color: var(--tsm-text, #fff);
+    pointer-events: none;
+  }
+
+  .tsm-section__content--center {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .tsm-section__content--bottom-center {
+    align-items: flex-end;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .tsm-section__content--bottom-left {
+    align-items: flex-end;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .tsm-section__content--top-left {
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .tsm-section__inner {
+    max-width: 64rem;
+    text-shadow: 0 0 1.2rem rgba(0, 0, 0, 0.85), 0 0 0.2rem rgba(0, 0, 0, 0.9);
+  }
+
+  .tsm-section__heading {
+    margin: 0 0 0.4em;
+    color: inherit;
+    line-height: 1.05;
+  }
+
+  .tsm-section__heading--small {
+    font-size: clamp(2.4rem, 3vw, 3.6rem);
+  }
+
+  .tsm-section__heading--medium {
+    font-size: clamp(3.2rem, 5vw, 5.6rem);
+  }
+
+  .tsm-section__heading--large {
+    font-size: clamp(4rem, 8vw, 9.6rem);
+  }
+
+  .tsm-section__text {
+    margin: 0 0 1.2em;
+    font-size: 1.1em;
+  }
+
+  .tsm-section__text > :first-child {
+    margin-top: 0;
+  }
+
+  .tsm-section__text > :last-child {
+    margin-bottom: 0;
+  }
+
+  .tsm-section__button {
+    pointer-events: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tsm-section__screen .tsm-crt {
+      display: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "TV static morph",
+  "tag": "section",
+  "class": "tsm-shopify-section",
+  "max_blocks": 10,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "height",
+      "label": "Height (desktop)",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "height_mobile",
+      "label": "Height (mobile)",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "default": 80
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "Full width",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "info": "Shows through the static once an image has formed.",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Static"
+    },
+    {
+      "type": "range",
+      "id": "cell_size",
+      "label": "Static pixel size",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "unit": "px",
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "saturation",
+      "label": "Static color",
+      "info": "0% is black-and-white static. 100% is full RGB.",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "flicker_fps",
+      "label": "Flicker speed",
+      "min": 6,
+      "max": 60,
+      "step": 2,
+      "unit": "fps",
+      "default": 30
+    },
+    {
+      "type": "checkbox",
+      "id": "crt",
+      "label": "CRT effects",
+      "info": "Scanlines, vignette, a rolling brightness band and occasional line tearing.",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Image"
+    },
+    {
+      "type": "paragraph",
+      "content": "Add images as blocks. Transparent PNG logos work best, because the transparent areas stay as static. When no images are added, the fallback text (or your store name) is rendered instead."
+    },
+    {
+      "type": "text",
+      "id": "fallback_text",
+      "label": "Fallback text",
+      "info": "Used only when no image blocks have images. Leave empty to use the store name."
+    },
+    {
+      "type": "range",
+      "id": "image_scale",
+      "label": "Image size (desktop)",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "image_scale_mobile",
+      "label": "Image size (mobile)",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 85
+    },
+    {
+      "type": "header",
+      "content": "Halftone"
+    },
+    {
+      "type": "range",
+      "id": "dot_spacing",
+      "label": "Dot spacing",
+      "info": "Smaller spacing gives more detail and uses more particles.",
+      "min": 3,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 5
+    },
+    {
+      "type": "range",
+      "id": "dot_size",
+      "label": "Dot size",
+      "min": 50,
+      "max": 150,
+      "step": 5,
+      "unit": "%",
+      "default": 95
+    },
+    {
+      "type": "range",
+      "id": "dot_angle",
+      "label": "Screen angle",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "°",
+      "default": 45
+    },
+    {
+      "type": "select",
+      "id": "dot_shape",
+      "label": "Dot shape",
+      "options": [
+        { "value": "round", "label": "Round (print halftone)" },
+        { "value": "square", "label": "Square (pixel)" }
+      ],
+      "default": "round"
+    },
+    {
+      "type": "select",
+      "id": "tone",
+      "label": "Dot size follows",
+      "info": "Use Transparency for logos. Use Brightness or Darkness for photos and images without transparency.",
+      "options": [
+        { "value": "alpha", "label": "Transparency" },
+        { "value": "luminance", "label": "Brightness" },
+        { "value": "darkness", "label": "Darkness" }
+      ],
+      "default": "alpha"
+    },
+    {
+      "type": "header",
+      "content": "Image color"
+    },
+    {
+      "type": "select",
+      "id": "color_source",
+      "label": "Dot color",
+      "info": "With Original image colors, parts too close to the background color (like a black logo on black) are lightened so they stay visible.",
+      "options": [
+        { "value": "static", "label": "Static (RGB noise)" },
+        { "value": "image", "label": "Original image colors" },
+        { "value": "custom", "label": "Custom color" }
+      ],
+      "default": "static"
+    },
+    {
+      "type": "color",
+      "id": "custom_color",
+      "label": "Custom dot color",
+      "default": "#ffffff",
+      "visible_if": "{{ section.settings.color_source == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "grain",
+      "label": "Static grain in image",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 20,
+      "visible_if": "{{ section.settings.color_source != 'static' }}"
+    },
+    {
+      "type": "range",
+      "id": "background_static",
+      "label": "Background static when formed",
+      "info": "How bright the surrounding static stays while the image is held.",
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "unit": "%",
+      "default": 15
+    },
+    {
+      "type": "header",
+      "content": "Motion"
+    },
+    {
+      "type": "select",
+      "id": "playback",
+      "label": "Playback",
+      "options": [
+        { "value": "loop", "label": "Loop through images" },
+        { "value": "once", "label": "Play once, hold last image" },
+        { "value": "hover", "label": "Form on hover or tap" },
+        { "value": "scroll", "label": "Form as you scroll" }
+      ],
+      "default": "loop"
+    },
+    {
+      "type": "range",
+      "id": "hold_static",
+      "label": "Static before each image",
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
+      "unit": "s",
+      "default": 1.5
+    },
+    {
+      "type": "range",
+      "id": "morph_duration",
+      "label": "Morph duration",
+      "min": 0.5,
+      "max": 6,
+      "step": 0.1,
+      "unit": "s",
+      "default": 2.4
+    },
+    {
+      "type": "range",
+      "id": "hold_image",
+      "label": "Image hold",
+      "min": 0.5,
+      "max": 15,
+      "step": 0.5,
+      "unit": "s",
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "pattern",
+      "label": "Arrival pattern",
+      "options": [
+        { "value": "random", "label": "Random" },
+        { "value": "scan", "label": "Scan (top to bottom)" },
+        { "value": "sweep", "label": "Sweep (left to right)" },
+        { "value": "radial", "label": "Center out" }
+      ],
+      "default": "random"
+    },
+    {
+      "type": "range",
+      "id": "stagger",
+      "label": "Stagger",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "swirl",
+      "label": "Swirl",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "travel",
+      "label": "Particle travel",
+      "info": "100% means particles can come from anywhere on screen. Lower values condense the image out of nearby static.",
+      "min": 5,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "checkbox",
+      "id": "pointer",
+      "label": "Cursor scrambles the image",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "pointer_radius",
+      "label": "Cursor radius",
+      "min": 40,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "default": 120,
+      "visible_if": "{{ section.settings.pointer }}"
+    },
+    {
+      "type": "header",
+      "content": "Text overlay"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "Heading size",
+      "options": [
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "Text position",
+      "options": [
+        { "value": "center", "label": "Center" },
+        { "value": "bottom-center", "label": "Bottom center" },
+        { "value": "bottom-left", "label": "Bottom left" },
+        { "value": "top-left", "label": "Top left" }
+      ],
+      "default": "bottom-center"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image",
+          "info": "Transparent PNG recommended, at least 1200px wide. Selecting this block in the editor previews it."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "TV static morph",
+      "blocks": [
+        { "type": "image" }
+      ]
+    }
+  ]
+}
+{% endschema %}
