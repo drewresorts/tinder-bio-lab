@@ -47,7 +47,7 @@
         "dot_spacing": 5,
         "dot_size": 95,
         "dot_angle": 45,
-        "dot_shape": "round",
+        "dot_shape": "square",
         "tone": "darkness",
         "color_source": "static",
         "custom_color": "#ffffff",
