@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--ARTIFACT:START-->
+<title>TV Static Morph Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Chivo+Mono:wght@400;500&family=VT323&display=swap">
+<style>
+  /* Layout: a monitor on the left and a signal control deck on the right; they stack on phones. */
+  :root {
+    color-scheme: dark;
+    --bg: #0b0a0f;
+    --surface: #14131a;
+    --surface-2: #1d1b25;
+    --line: #2c2a36;
+    --fg: #ece9f3;
+    --muted: #8f8b9e;
+    --accent: #3fd2e2;      /* process cyan */
+    --accent-ink: #031417;
+    --checker-a: #23212b;
+    --checker-b: #17161d;
+    --font-ui: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-data: "Chivo Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --font-osd: "VT323", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --radius: 12px;
+  }
+
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 400 14px/1.45 var(--font-ui);
+  }
+
+  .app {
+    box-sizing: border-box;
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 16px;
+    padding-block: 16px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  /* ---------- monitor ---------- */
+  .monitor {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 0 0 1px var(--line), 0 30px 80px -40px rgba(63, 210, 226, .25);
+  }
+  .monitor tv-static-morph { position: absolute; inset: 0; }
+  .monitor.is-drop::after {
+    content: "Drop PNGs to load them";
+    position: absolute; inset: 12px; z-index: 5;
+    display: grid; place-items: center;
+    border: 2px dashed var(--accent); border-radius: calc(var(--radius) - 4px);
+    background: rgba(3, 20, 23, .72);
+    font: 400 34px/1 var(--font-osd); color: var(--accent); letter-spacing: .04em;
+  }
+
+  .osd {
+    position: absolute; z-index: 3; pointer-events: none;
+    font: 400 26px/1 var(--font-osd);
+    letter-spacing: .06em;
+    color: #f4fbff;
+    text-shadow: 0 0 6px rgba(63, 210, 226, .7), 2px 2px 0 rgba(0, 0, 0, .8);
+    text-transform: uppercase;
+  }
+  .osd--tl { top: 14px; left: 18px; }
+  .osd--br { right: 18px; bottom: 14px; font-size: 20px; opacity: .85; }
+
+  /* ---------- control deck ---------- */
+  .deck {
+    min-height: 0;
+    overflow-y: auto;
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+  .deck__head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .brand__dots { display: grid; grid-template-columns: repeat(3, 7px); gap: 3px; }
+  .brand__dots i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+  .brand__dots i:nth-child(1) { background: #ff3b4f; }
+  .brand__dots i:nth-child(2) { background: #3bff7c; }
+  .brand__dots i:nth-child(3) { background: #3b7cff; }
+  .brand h1 {
+    margin: 0; font-size: 17px; font-weight: 750; font-stretch: 82%;
+    letter-spacing: .01em; text-wrap: balance;
+  }
+
+  .group { border-bottom: 1px solid var(--line); }
+  .group > summary {
+    list-style: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    font-size: 11px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .group > summary::-webkit-details-marker { display: none; }
+  .group > summary::after { content: "+"; font: 400 16px/1 var(--font-data); }
+  .group[open] > summary::after { content: "−"; }
+  .group > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .group__body { display: grid; gap: 14px; padding: 2px 18px 18px; }
+
+  .ctl { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; }
+  .ctl[hidden] { display: none !important; }
+  .ctl label { font-size: 13px; color: var(--fg); }
+  .ctl output, .ctl .hint {
+    font: 400 12px/1 var(--font-data); color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .ctl input[type="range"], .ctl select { grid-column: 1 / -1; }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 22px; margin: 0; background: transparent; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px; border-radius: 2px;
+    background: linear-gradient(var(--accent), var(--accent)) 0 / var(--fill, 50%) 100% no-repeat, var(--line);
+  }
+  input[type="range"]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--line); }
+  input[type="range"]::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--accent); }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; margin-top: -5px; border-radius: 3px;
+    background: var(--fg); border: 0;
+  }
+  input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 3px; background: var(--fg); border: 0; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  select, .text-in {
+    width: 100%; box-sizing: border-box;
+    padding: 8px 10px; border-radius: 8px;
+    background: var(--surface-2); color: var(--fg);
+    border: 1px solid var(--line);
+    font: 400 13px/1.2 var(--font-ui);
+  }
+  select:focus-visible, .text-in:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .switch { position: relative; width: 36px; height: 20px; }
+  .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+  .switch span {
+    position: absolute; inset: 0; border-radius: 10px; background: var(--line); transition: background .15s;
+    pointer-events: none;
+  }
+  .switch span::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--fg); transition: transform .15s;
+  }
+  .switch input:checked + span { background: var(--accent); }
+  .switch input:checked + span::after { transform: translateX(16px); background: var(--accent-ink); }
+  .switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  input[type="color"] {
+    width: 36px; height: 24px; padding: 0; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--surface-2); cursor: pointer;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--fg);
+    font: 600 13px/1 var(--font-ui);
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn--accent { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn--accent:hover { border-color: var(--fg); }
+
+  /* images */
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+  .thumb {
+    position: relative; aspect-ratio: 1; max-width: 100%;
+    border-radius: 8px; overflow: hidden;
+    background: repeating-conic-gradient(var(--checker-a) 0 25%, var(--checker-b) 0 50%) 0 0 / 12px 12px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    cursor: pointer;
+  }
+  .thumb img, .thumb canvas { width: 100%; height: 100%; object-fit: contain; display: block; padding: 6px; box-sizing: border-box; }
+  .thumb.is-current { box-shadow: inset 0 0 0 2px var(--accent); }
+  .thumb__x {
+    position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 6px;
+    border: 0; background: rgba(0, 0, 0, .7); color: var(--fg); cursor: pointer;
+    font: 400 14px/20px var(--font-data); padding: 0;
+  }
+  .thumb__x:focus-visible { outline: 2px solid var(--accent); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .row > .text-in { flex: 1 1 140px; width: auto; }
+  .note { margin: 0; color: var(--muted); font-size: 12px; }
+  .file-in { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+  .deck__foot { margin-top: auto; padding: 16px 18px 18px; display: grid; gap: 10px; }
+  .deck__foot p { margin: 0; color: var(--muted); font-size: 12px; }
+  .copy-out {
+    width: 100%; box-sizing: border-box; min-height: 120px; resize: vertical;
+    background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); border-radius: 8px;
+    font: 400 12px/1.5 var(--font-data); padding: 10px;
+  }
+
+  @media (max-width: 899px) {
+    html, body { height: auto; }
+    .app { height: auto; grid-template-columns: minmax(0, 1fr); }
+    .monitor { height: 62vh; min-height: 320px; }
+    .deck { overflow: visible; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .switch span, .switch span::after { transition: none; }
+  }
+</style>
+<!--HEAD:END-->
+</head>
+<body>
+<main class="app">
+  <section class="monitor" id="monitor" aria-label="Preview screen">
+    <tv-static-morph id="tv" data-image-scale="60" data-playback="loop"></tv-static-morph>
+    <div class="osd osd--tl" id="osd-phase" aria-live="polite">Searching</div>
+    <div class="osd osd--br" id="osd-meta"></div>
+  </section>
+
+  <aside class="deck" aria-label="Controls">
+    <div class="deck__head">
+      <div class="brand">
+        <span class="brand__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <h1>TV Static Morph</h1>
+      </div>
+      <button class="btn" id="next-btn" type="button">Next image</button>
+    </div>
+
+    <details class="group" open>
+      <summary>Images</summary>
+      <div class="group__body">
+        <div class="thumbs" id="thumbs"></div>
+        <div class="row">
+          <label class="btn btn--accent" for="file-in">Add PNGs</label>
+          <input class="file-in" id="file-in" type="file" accept="image/png,image/webp,image/svg+xml,image/jpeg,image/gif" multiple>
+          <button class="btn" id="samples-btn" type="button">Load samples</button>
+        </div>
+        <div class="row">
+          <label class="note" for="text-in" style="flex-basis:100%">Or turn text into an image</label>
+          <input class="text-in" id="text-in" type="text" value="STATIC" maxlength="40" autocomplete="off">
+          <button class="btn" id="text-btn" type="button">Add text</button>
+        </div>
+        <p class="note">Transparent areas stay as static. Files stay in this browser and are never uploaded. You can also drop files onto the screen.</p>
+      </div>
+    </details>
+
+    <div id="groups"></div>
+
+    <div class="deck__foot">
+      <p>Each label matches a setting in the Shopify theme editor under <strong>TV static morph</strong>.</p>
+      <button class="btn" id="copy-btn" type="button">Copy settings for Shopify</button>
+      <textarea class="copy-out" id="copy-out" readonly hidden aria-label="Settings to copy"></textarea>
+    </div>
+  </aside>
+</main>
+
+<script src="../assets/tv-static-morph.js"></script>
+<script>
+(function () {
+  const tv = document.getElementById('tv');
+  const attr = (k) => 'data-' + k.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+
+  /* Controls mirror sections/tv-static-morph.liquid (same labels, ranges and defaults). */
+  const GROUPS = [
+    { title: 'Playback', open: true, controls: [
+      { key: 'playback', label: 'Playback', type: 'select', value: 'loop', options: [
+        ['loop', 'Loop through images'], ['once', 'Play once, hold last image'],
+        ['hover', 'Form on hover or tap'], ['manual', 'Scrub manually (preview only)']] },
+      { key: '_scrub', label: 'Morph position', type: 'range', min: 0, max: 100, step: 1, value: 100, unit: '%',
+        show: (s) => s.playback === 'manual' },
+      { key: 'holdStatic', label: 'Static before each image', type: 'range', min: 0, max: 10, step: 0.5, value: 1.5, unit: 's',
+        show: (s) => s.playback !== 'manual' },
+      { key: 'morphDuration', label: 'Morph duration', type: 'range', min: 0.5, max: 6, step: 0.1, value: 2.4, unit: 's',
+        show: (s) => s.playback !== 'manual' },
+      { key: 'holdImage', label: 'Image hold', type: 'range', min: 0.5, max: 15, step: 0.5, value: 4, unit: 's',
+        show: (s) => s.playback === 'loop' || s.playback === 'once' },
+    ]},
+    { title: 'Static', open: true, controls: [
+      { key: 'cellSize', label: 'Static pixel size', type: 'range', min: 1, max: 12, step: 1, value: 2, unit: 'px' },
+      { key: 'saturation', label: 'Static color', type: 'range', min: 0, max: 100, step: 5, value: 100, unit: '%' },
+      { key: 'flickerFps', label: 'Flicker speed', type: 'range', min: 6, max: 60, step: 2, value: 30, unit: ' fps' },
+      { key: 'backgroundStatic', label: 'Background static when formed', type: 'range', min: 0, max: 60, step: 5, value: 15, unit: '%' },
+      { key: 'crt', label: 'CRT effects', type: 'toggle', value: true },
+      { key: 'background', label: 'Background color', type: 'color', value: '#000000' },
+    ]},
+    { title: 'Halftone', open: true, controls: [
+      { key: 'imageScale', label: 'Image size (desktop)', type: 'range', min: 20, max: 100, step: 5, value: 60, unit: '%' },
+      { key: 'dotSpacing', label: 'Dot spacing', type: 'range', min: 3, max: 24, step: 1, value: 5, unit: 'px',
+        fmt: (v) => v + 'px · ' + Math.round(96 / v) + ' lpi' },
+      { key: 'dotSize', label: 'Dot size', type: 'range', min: 50, max: 150, step: 5, value: 95, unit: '%' },
+      { key: 'dotAngle', label: 'Screen angle', type: 'range', min: 0, max: 90, step: 5, value: 45, unit: '°' },
+      { key: 'dotShape', label: 'Dot shape', type: 'select', value: 'round', options: [
+        ['round', 'Round (print halftone)'], ['square', 'Square (pixel)']] },
+      { key: 'tone', label: 'Dot size follows', type: 'select', value: 'alpha', options: [
+        ['alpha', 'Transparency'], ['luminance', 'Brightness'], ['darkness', 'Darkness']] },
+    ]},
+    { title: 'Image color', open: false, controls: [
+      { key: 'colorSource', label: 'Dot color', type: 'select', value: 'static', options: [
+        ['static', 'Static (RGB noise)'], ['image', 'Original image colors'], ['custom', 'Custom color']] },
+      { key: 'customColor', label: 'Custom dot color', type: 'color', value: '#ffffff', show: (s) => s.colorSource === 'custom' },
+      { key: 'grain', label: 'Static grain in image', type: 'range', min: 0, max: 100, step: 5, value: 20, unit: '%',
+        show: (s) => s.colorSource !== 'static' },
+    ]},
+    { title: 'Motion', open: false, controls: [
+      { key: 'pattern', label: 'Arrival pattern', type: 'select', value: 'random', options: [
+        ['random', 'Random'], ['scan', 'Scan (top to bottom)'], ['sweep', 'Sweep (left to right)'], ['radial', 'Center out']] },
+      { key: 'stagger', label: 'Stagger', type: 'range', min: 0, max: 90, step: 5, value: 60, unit: '%' },
+      { key: 'swirl', label: 'Swirl', type: 'range', min: 0, max: 100, step: 5, value: 30, unit: '%' },
+      { key: 'travel', label: 'Particle travel', type: 'range', min: 5, max: 100, step: 5, value: 100, unit: '%' },
+      { key: 'pointer', label: 'Cursor scrambles the image', type: 'toggle', value: true },
+      { key: 'pointerRadius', label: 'Cursor radius', type: 'range', min: 40, max: 300, step: 10, value: 120, unit: 'px',
+        show: (s) => s.pointer },
+    ]},
+  ];
+
+  const state = {};
+  const rows = [];
+  const groupsEl = document.getElementById('groups');
+
+  function fmt(c, v) {
+    if (c.fmt) return c.fmt(v);
+    if (c.type === 'range') return (Number.isInteger(c.step) ? v : Number(v).toFixed(1)) + (c.unit || '');
+    return '';
+  }
+
+  function apply(key, value) {
+    state[key] = value;
+    if (key === '_scrub') { tv.progress = value / 100; return; }
+    tv.setAttribute(attr(key), String(value));
+    if (key === 'playback' && value === 'manual') tv.progress = state._scrub / 100;
+  }
+
+  function refreshVisibility() {
+    rows.forEach(({ c, el }) => { if (c.show) el.hidden = !c.show(state); });
+  }
+
+  function fillTrack(input) {
+    const p = (input.value - input.min) / (input.max - input.min) * 100;
+    input.style.setProperty('--fill', p + '%');
+  }
+
+  GROUPS.forEach((g) => {
+    const det = document.createElement('details');
+    det.className = 'group';
+    det.open = g.open;
+    det.innerHTML = '<summary>' + g.title + '</summary><div class="group__body"></div>';
+    const body = det.querySelector('.group__body');
+    g.controls.forEach((c) => {
+      const id = 'c-' + c.key;
+      const el = document.createElement('div');
+      el.className = 'ctl';
+      let html = '<label for="' + id + '">' + c.label + '</label>';
+      if (c.type === 'range') {
+        html += '<output for="' + id + '" id="o-' + c.key + '"></output>' +
+          '<input type="range" id="' + id + '" min="' + c.min + '" max="' + c.max + '" step="' + c.step + '" value="' + c.value + '">';
+      } else if (c.type === 'select') {
+        html += '<span></span><select id="' + id + '">' +
+          c.options.map((o) => '<option value="' + o[0] + '"' + (o[0] === c.value ? ' selected' : '') + '>' + o[1] + '</option>').join('') +
+          '</select>';
+      } else if (c.type === 'toggle') {
+        html += '<span class="switch"><input type="checkbox" role="switch" id="' + id + '"' + (c.value ? ' checked' : '') + '><span></span></span>';
+      } else if (c.type === 'color') {
+        html += '<input type="color" id="' + id + '" value="' + c.value + '">';
+      }
+      el.innerHTML = html;
+      body.appendChild(el);
+      rows.push({ c, el });
+
+      const input = el.querySelector('#' + id);
+      const out = el.querySelector('output');
+      const read = () => c.type === 'toggle' ? input.checked : c.type === 'range' ? parseFloat(input.value) : input.value;
+      const onInput = () => {
+        const v = read();
+        if (out) out.textContent = fmt(c, v);
+        if (c.type === 'range') fillTrack(input);
+        apply(c.key, v);
+        refreshVisibility();
+      };
+      input.addEventListener('input', onInput);
+      input.addEventListener('change', onInput);
+      state[c.key] = c.value;
+      if (out) out.textContent = fmt(c, c.value);
+      if (c.type === 'range') fillTrack(input);
+      if (c.key !== '_scrub') tv.setAttribute(attr(c.key), String(c.value));
+    });
+    groupsEl.appendChild(det);
+  });
+  refreshVisibility();
+
+  /* ---------- sample images (drawn on canvas, transparent backgrounds) ---------- */
+
+  function emblem() {
+    const c = document.createElement('canvas'); c.width = c.height = 1000;
+    const x = c.getContext('2d');
+    x.lineWidth = 90; x.strokeStyle = '#ff2f6d';
+    x.beginPath(); x.arc(500, 500, 400, 0, Math.PI * 2); x.stroke();
+    x.lineWidth = 34; x.strokeStyle = '#ffffff';
+    x.beginPath(); x.arc(500, 500, 290, 0, Math.PI * 2); x.stroke();
+    x.fillStyle = '#ffd23f';
+    x.beginPath();
+    [[543, 262], [378, 529], [486, 529], [450, 738], [630, 450], [514, 450], [572, 262]].forEach((p, i) => i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1]));
+    x.closePath(); x.fill();
+    c.dataset.name = 'Emblem';
+    return c;
+  }
+
+  function sphere() {
+    const c = document.createElement('canvas'); c.width = c.height = 1000;
+    const x = c.getContext('2d');
+    const g = x.createRadialGradient(380, 360, 20, 500, 500, 430);
+    g.addColorStop(0, 'rgba(120,230,255,1)');
+    g.addColorStop(0.55, 'rgba(60,120,255,.6)');
+    g.addColorStop(1, 'rgba(90,40,200,.12)');
+    x.fillStyle = g;
+    x.beginPath(); x.arc(500, 500, 430, 0, Math.PI * 2); x.fill();
+    c.dataset.name = 'Sphere';
+    return c;
+  }
+
+  function textImage(text) {
+    const fs = 300, pad = 30;
+    const c = document.createElement('canvas');
+    const x = c.getContext('2d');
+    const font = '800 ' + fs + 'px Archivo, "Helvetica Neue", Arial, sans-serif';
+    x.font = font;
+    c.width = Math.ceil(x.measureText(text).width + pad * 2);
+    c.height = Math.ceil(fs * 1.1 + pad * 2);
+    x.font = font;
+    x.fillStyle = '#ffffff';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(text, c.width / 2, c.height / 2);
+    c.dataset.name = text;
+    return c;
+  }
+
+  /* ---------- image list ---------- */
+
+  let images = []; // { src: canvas | objectURL, name }
+  const thumbs = document.getElementById('thumbs');
+
+  function renderThumbs() {
+    thumbs.innerHTML = '';
+    images.forEach((im, i) => {
+      const t = document.createElement('div');
+      t.className = 'thumb' + (i === tv.index ? ' is-current' : '');
+      t.title = 'Show ' + im.name;
+      t.tabIndex = 0;
+      t.setAttribute('role', 'button');
+      t.setAttribute('aria-label', 'Show ' + im.name);
+      if (!im.thumb) im.thumb = typeof im.src === 'string' ? im.src : im.src.toDataURL('image/png');
+      const vis = new Image();
+      vis.src = im.thumb;
+      vis.alt = '';
+      t.appendChild(vis);
+      const x = document.createElement('button');
+      x.className = 'thumb__x'; x.type = 'button'; x.textContent = '×';
+      x.setAttribute('aria-label', 'Remove ' + im.name);
+      x.addEventListener('click', (e) => { e.stopPropagation(); removeImage(i); });
+      t.appendChild(x);
+      const show = () => tv.goTo(i, state.playback === 'manual');
+      t.addEventListener('click', show);
+      t.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); } });
+      thumbs.appendChild(t);
+    });
+  }
+
+  function markCurrent() {
+    Array.from(thumbs.children).forEach((t, i) => t.classList.toggle('is-current', i === tv.index));
+  }
+
+  function commit() {
+    tv.setImages(images.map((im) => im.src));
+    renderThumbs();
+    updateMeta();
+  }
+
+  function removeImage(i) {
+    const [gone] = images.splice(i, 1);
+    if (gone && typeof gone.src === 'string' && gone.src.startsWith('blob:')) URL.revokeObjectURL(gone.src);
+    commit();
+  }
+
+  function addFiles(files) {
+    const list = Array.from(files || []).filter((f) => /^image\//.test(f.type));
+    if (!list.length) return;
+    // Uploading your own art replaces the samples.
+    if (images.every((im) => typeof im.src !== 'string')) images = [];
+    list.forEach((f) => images.push({ src: URL.createObjectURL(f), name: f.name }));
+    commit();
+  }
+
+  document.getElementById('file-in').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
+  document.getElementById('samples-btn').addEventListener('click', () => {
+    images = [emblem(), textImage('STATIC'), sphere()].map((c) => ({ src: c, name: c.dataset.name }));
+    commit();
+  });
+  document.getElementById('text-btn').addEventListener('click', () => {
+    const v = document.getElementById('text-in').value.trim();
+    if (!v) return;
+    const c = textImage(v);
+    images.push({ src: c, name: v });
+    commit();
+  });
+  document.getElementById('next-btn').addEventListener('click', () => {
+    if (images.length) tv.goTo(tv.index + 1, state.playback === 'manual');
+  });
+
+  const monitor = document.getElementById('monitor');
+  ['dragenter', 'dragover'].forEach((t) => monitor.addEventListener(t, (e) => { e.preventDefault(); monitor.classList.add('is-drop'); }));
+  ['dragleave', 'drop'].forEach((t) => monitor.addEventListener(t, (e) => { e.preventDefault(); monitor.classList.remove('is-drop'); }));
+  monitor.addEventListener('drop', (e) => addFiles(e.dataTransfer && e.dataTransfer.files));
+
+  /* ---------- on-screen display ---------- */
+
+  const osdPhase = document.getElementById('osd-phase');
+  const osdMeta = document.getElementById('osd-meta');
+  const PHASE_TEXT = { static: 'Searching', forming: 'Tuning', image: 'Signal locked', dissolving: 'Signal lost' };
+  function updateMeta() {
+    const n = images.length;
+    osdMeta.textContent = n
+      ? 'CH ' + String(tv.index + 1).padStart(2, '0') + '/' + String(n).padStart(2, '0') + ' · ' + tv.particleCount.toLocaleString() + ' dots'
+      : 'No images';
+  }
+  tv.addEventListener('tsm:phase', (e) => {
+    osdPhase.textContent = PHASE_TEXT[e.detail.phase] || '';
+    markCurrent();
+    updateMeta();
+  });
+  setInterval(() => { updateMeta(); markCurrent(); }, 1000);
+
+  /* ---------- copy settings ---------- */
+
+  document.getElementById('copy-btn').addEventListener('click', (e) => {
+    const lines = [];
+    GROUPS.forEach((g) => g.controls.forEach((c) => {
+      if (c.key.startsWith('_') || (c.show && !c.show(state))) return;
+      let v = state[c.key];
+      if (c.type === 'select') v = (c.options.find((o) => o[0] === v) || [, v])[1];
+      else if (c.type === 'toggle') v = v ? 'On' : 'Off';
+      else if (c.type === 'range') v = fmt({ ...c, fmt: null }, v);
+      lines.push(c.label + ': ' + v);
+    }));
+    const text = lines.join('\n');
+    const out = document.getElementById('copy-out');
+    out.value = text;
+    const btn = e.currentTarget;
+    const done = (ok) => {
+      btn.textContent = ok ? 'Copied' : 'Select and copy below';
+      out.hidden = ok;
+      if (!ok) { out.focus(); out.select(); }
+      setTimeout(() => { btn.textContent = 'Copy settings for Shopify'; }, 2200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => done(true), () => done(false));
+    else done(false);
+  });
+
+  /* ---------- start with samples ---------- */
+  const boot = () => document.getElementById('samples-btn').click();
+  if (document.fonts && document.fonts.load) document.fonts.load('800 300px Archivo').then(boot, boot); else boot();
+})();
+</script>
+<!--ARTIFACT:END-->
+</body>
+</html>
