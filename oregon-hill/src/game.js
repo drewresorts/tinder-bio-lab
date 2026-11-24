@@ -1650,10 +1650,6 @@ export function createGame(ctx) {
         save();
         ui.refreshPhone();
       }));
-      w.appendChild(btn(audio.muted ? 'Unmute audio' : 'Mute audio', () => {
-        audio.toggleMute();
-        ui.refreshPhone();
-      }));
       w.appendChild(btn(`Vertex wobble: ${SHARED.uJitter.value >= 1.5 ? 'EXTRA' : SHARED.uJitter.value >= 1 ? 'ON' : 'OFF'}`, () => {
         const v = SHARED.uJitter.value;
         SHARED.uJitter.value = v >= 1.5 ? 0.01 : v >= 1 ? 2 : 1;

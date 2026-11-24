@@ -49,7 +49,7 @@ Sanity hits zero and you move back to Chesterfield. There are seven endings, one
 - `src/game.js`: state, clock, stats, every interaction and dialogue tree, phone UI, save/load, endings.
 - `src/ai.js`: pedestrians, Officer Gary, the horrors, the train, and ticketing during skipped time.
 - `src/content.js`: all the writing. Edit this to add gigs, ticket reasons, memos, or tattoo small-talk.
-- `src/audio.js`: everything is synthesized with WebAudio (drone, radio static, sirens, blips). There are no audio files.
+- `src/audio.js`: synthesized WebAudio (drone, radio static, sirens, blips). **Currently switched off** (`AUDIO_ENABLED = false`); the pocket radio still shows static on the HUD.
 
 The game autosaves to `localStorage` each time you sleep.
 

@@ -1,4 +1,8 @@
 // Procedural WebAudio: ambient drone, pocket-radio static, sirens, blips.
+// Audio is switched off for now. Flip to true to bring the drone, radio static,
+// sirens and blips back; every call below is a no-op while it's false.
+const AUDIO_ENABLED = false;
+
 export function createAudio() {
   let ctx = null;
   let master, staticGain, staticFilter, droneGain, droneFilter, oscs = [];
@@ -6,7 +10,7 @@ export function createAudio() {
   let noiseBuf = null;
 
   function init() {
-    if (ctx) return;
+    if (ctx || !AUDIO_ENABLED) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     ctx = new AC();
