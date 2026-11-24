@@ -1,0 +1,170 @@
+:root {
+  --ink: #f0e8d0;
+  --dim: #a89c80;
+  --box1: #0b1640;
+  --box2: #26347a;
+  --edge: #d8d0c0;
+  --red: #d83a3a;
+  --energy: #e0b030;
+  --sanity: #6ab0e0;
+  --clout: #d05ad0;
+  --bg: #000;
+  color-scheme: dark;
+}
+/* Oregon Hill is always night-mode: the fog does not respect your OS settings. */
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #000; } }
+:root[data-theme="light"], :root[data-theme="dark"] { --bg: #000; }
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  overflow: hidden;
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 22px;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.hidden { display: none !important; }
+
+/* HUD ------------------------------------------------------------------ */
+#hud { position: fixed; inset: 0; pointer-events: none; text-shadow: 2px 2px 0 #000; }
+#hud-tl { position: absolute; top: 12px; left: 16px; }
+#hud-day { font-family: 'Silkscreen', monospace; font-size: 22px; letter-spacing: 1px; }
+#hud-time { font-size: 30px; line-height: 1; }
+#hud-loc { color: var(--dim); font-size: 20px; }
+#hud-tr { position: absolute; top: 12px; right: 16px; text-align: right; }
+#hud-money { font-family: 'Silkscreen', monospace; font-size: 26px; color: #9ae07a; }
+#hud-money.neg { color: var(--red); }
+#hud-rent, #hud-tickets { font-size: 20px; color: var(--dim); }
+#hud-rent.urgent, #hud-tickets.urgent { color: var(--red); animation: blink 1s steps(2) infinite; }
+#hud-bl { position: absolute; left: 16px; bottom: 14px; width: min(300px, 46vw); }
+.bar { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 18px; }
+.bar span { width: 64px; color: var(--dim); }
+.track { flex: 1; height: 12px; background: #000a; border: 2px solid #d8d0c0aa; }
+.fill { height: 100%; width: 50%; transition: width .3s steps(6); }
+.fill.e { background: var(--energy); }
+.fill.s { background: var(--sanity); }
+.fill.c { background: var(--clout); }
+.fill.low { animation: blink .6s steps(2) infinite; }
+#hud-status { margin-top: 6px; font-size: 18px; color: var(--dim); min-height: 20px; }
+#hud-br { position: absolute; right: 16px; bottom: 14px; text-align: right; max-width: 44vw; }
+#hud-radio { font-family: 'Silkscreen', monospace; font-size: 14px; color: #666; }
+#hud-radio.on { color: var(--red); }
+#hud-hint { font-size: 19px; color: var(--dim); margin-top: 4px; }
+#prompt {
+  position: absolute; left: 50%; bottom: 22%; transform: translateX(-50%);
+  background: #000c; border: 2px solid var(--edge); padding: 4px 14px; font-size: 24px; white-space: nowrap;
+}
+@keyframes blink { 50% { opacity: .25; } }
+
+/* Toasts --------------------------------------------------------------- */
+#toasts { position: fixed; top: 84px; left: 50%; transform: translateX(-50%); width: min(560px, 92vw); pointer-events: none; z-index: 20; }
+.toast {
+  background: linear-gradient(#0b1640ee, #26347aee); border: 2px solid var(--edge); padding: 6px 12px; margin-bottom: 6px;
+  font-size: 20px; line-height: 1.1; animation: tin .2s steps(3);
+  box-shadow: 3px 3px 0 #000;
+}
+.toast.bad { background: linear-gradient(#400b0bee, #7a2626ee); }
+.toast.good { background: linear-gradient(#0b401aee, #267a3aee); }
+.toast.out { opacity: 0; transition: opacity .4s; }
+@keyframes tin { from { transform: translateY(-8px); opacity: 0; } }
+
+/* Dialog --------------------------------------------------------------- */
+#dialog {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(820px, 94vw);
+  background: linear-gradient(var(--box1), var(--box2)); border: 3px solid var(--edge); border-radius: 6px;
+  box-shadow: 0 0 0 2px #000, 5px 5px 0 #000; padding: 12px 18px 14px; z-index: 30; pointer-events: auto;
+}
+#dlg-name { font-family: 'Silkscreen', monospace; font-size: 18px; color: #f0c860; margin-bottom: 4px; }
+#dlg-text { font-size: 24px; line-height: 1.12; white-space: pre-wrap; min-height: 54px; }
+#dialog.memo { background: #e8e0c8; color: #2a2418; border-color: #5a4a30; }
+#dialog.memo #dlg-name { color: #7a2a1a; }
+#dialog.memo #dlg-text { font-family: 'Courier New', monospace; font-size: 19px; font-weight: bold; }
+#dlg-choices { margin-top: 8px; }
+#dlg-choices button {
+  display: block; width: 100%; text-align: left; background: none; border: none; color: var(--ink);
+  font: inherit; font-size: 23px; padding: 2px 6px; cursor: pointer; line-height: 1.1;
+}
+#dlg-choices button.sel { background: #ffffff22; }
+#dlg-choices button.sel::before { content: '▶ '; color: #f0c860; }
+#dlg-choices button:disabled { color: #8088a8; cursor: default; }
+#dlg-choices .hint { color: var(--dim); font-size: 19px; }
+#dlg-next { position: absolute; right: 14px; bottom: 6px; animation: blink .8s steps(2) infinite; font-size: 18px; }
+
+/* Phone ------------------------------------------------------------------ */
+#phone {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(760px, 96vw); height: min(560px, 90vh);
+  background: linear-gradient(var(--box1), var(--box2)); border: 3px solid var(--edge); border-radius: 8px;
+  box-shadow: 0 0 0 2px #000, 6px 6px 0 #000; z-index: 40; display: flex; flex-direction: column; pointer-events: auto;
+}
+#phone-head { display: flex; justify-content: space-between; padding: 6px 14px; font-family: 'Silkscreen', monospace; font-size: 15px; border-bottom: 2px solid #d8d0c055; }
+#phone-close { cursor: pointer; color: var(--dim); }
+#phone-tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 10px 0; }
+#phone-tabs button {
+  font-family: 'Silkscreen', monospace; font-size: 13px; background: #0008; color: var(--dim); border: 2px solid #d8d0c055;
+  padding: 4px 8px; cursor: pointer;
+}
+#phone-tabs button.on { color: var(--ink); border-color: var(--edge); background: #ffffff1a; }
+#phone-body { flex: 1; overflow: auto; padding: 10px 16px; font-size: 21px; line-height: 1.15; }
+#phone-body h3 { font-family: 'Silkscreen', monospace; font-size: 15px; color: #f0c860; margin: 10px 0 4px; font-weight: 400; }
+#phone-body .row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; border-bottom: 1px dashed #d8d0c033; }
+#phone-body .row .r { color: var(--dim); text-align: right; flex-shrink: 0; }
+#phone-body .muted { color: var(--dim); }
+#phone-body button.act, .menu button {
+  font: inherit; font-size: 19px; background: #000a; color: var(--ink); border: 2px solid var(--edge); padding: 2px 10px; cursor: pointer;
+}
+#phone-body button.act:hover, .menu button:hover, .menu button.sel { background: #ffffff2a; }
+#phone-body button.act:disabled { opacity: .4; cursor: default; }
+#mapc { width: 100%; max-width: 680px; image-rendering: pixelated; border: 2px solid #d8d0c055; background: #111; display: block; margin: 0 auto; }
+.prog { display: inline-block; width: 90px; height: 10px; border: 1px solid var(--edge); vertical-align: middle; }
+.prog i { display: block; height: 100%; background: var(--energy); }
+
+/* Fade + screens -------------------------------------------------------- */
+#fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 50; transition: opacity .35s steps(5); }
+#fade.on { opacity: 1; pointer-events: auto; }
+.screen { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px; }
+#title { background: radial-gradient(transparent 30%, #000c 85%); }
+.title-logo {
+  font-family: 'Silkscreen', monospace; font-weight: 700; font-size: clamp(44px, 10vw, 104px); letter-spacing: 4px; color: #e8dcc0;
+  text-shadow: 4px 4px 0 #3a0a0a, 0 0 18px #8a2a1a88; animation: wob 4s ease-in-out infinite;
+}
+@keyframes wob { 50% { transform: skewX(-2deg) translateY(2px); filter: blur(.4px); } }
+.title-sub { font-size: clamp(20px, 3.4vw, 28px); color: var(--dim); margin-bottom: 26px; }
+.menu { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.menu button { font-family: 'Silkscreen', monospace; font-size: 18px; min-width: 240px; padding: 8px 14px; }
+.title-foot { margin-top: 30px; color: #6a6050; font-size: 18px; }
+#intro { background: #000; flex-direction: column; cursor: pointer; }
+#intro-text { white-space: pre-wrap; font-size: clamp(22px, 3.6vw, 32px); line-height: 1.25; max-width: 760px; animation: tin 1s; }
+.intro-skip { position: absolute; bottom: 24px; color: #555; font-size: 18px; }
+#ending { background: #000e; }
+.ending-wrap { max-width: 760px; }
+#end-title { font-family: 'Silkscreen', monospace; font-size: clamp(24px, 5vw, 42px); color: #f0c860; margin-bottom: 18px; }
+#end-text { white-space: pre-wrap; font-size: clamp(20px, 3vw, 26px); line-height: 1.2; margin-bottom: 18px; }
+#end-stats { color: var(--dim); font-size: 20px; margin-bottom: 20px; white-space: pre-wrap; }
+#error { position: fixed; inset: 0; z-index: 99; background: #200; color: #fbb; padding: 20px; font-size: 18px; white-space: pre-wrap; overflow: auto; }
+
+/* Touch ----------------------------------------------------------------- */
+#touch { position: fixed; inset: 0; pointer-events: none; z-index: 15; }
+#stick { position: absolute; left: 22px; bottom: 120px; width: 120px; height: 120px; border-radius: 50%; border: 2px solid #ffffff55; background: #0004; pointer-events: auto; }
+#knob { position: absolute; left: 40px; top: 40px; width: 40px; height: 40px; border-radius: 50%; background: #ffffff66; }
+#tbtns { position: absolute; right: 16px; bottom: 120px; display: grid; grid-template-columns: repeat(2, 58px); gap: 8px; pointer-events: auto; }
+#tbtns button { width: 58px; height: 58px; border-radius: 50%; border: 2px solid #ffffff66; background: #0006; color: #fff; font: inherit; font-size: 22px; }
+#tbtns button.on { background: #ffffff44; }
+
+@media (max-width: 640px) {
+  html, body { font-size: 18px; }
+  #hud-time { font-size: 24px; }
+  #hud-day { font-size: 16px; }
+  #hud-money { font-size: 20px; }
+  #hud-bl { bottom: 8px; }
+  #hud-br { display: none; }
+  #dlg-text { font-size: 20px; }
+  #dlg-choices button { font-size: 19px; }
+  #toasts { top: 70px; }
+  .toast { font-size: 17px; }
+  #prompt { bottom: 40%; font-size: 20px; }
+}
