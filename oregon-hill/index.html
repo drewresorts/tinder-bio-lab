@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Oregon Hill</title>
+<meta name="description" content="A PS1-style survival horror RPG about being a freelance creative in Richmond, VA.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="hud-tl">
+    <div id="hud-day">DAY 1 · MON</div>
+    <div id="hud-time">9:00 AM</div>
+    <div id="hud-loc">S Pine St</div>
+  </div>
+  <div id="hud-tr">
+    <div id="hud-money">$0</div>
+    <div id="hud-rent"></div>
+    <div id="hud-tickets"></div>
+  </div>
+  <div id="hud-bl">
+    <div class="bar"><span>ENERGY</span><div class="track"><div id="bar-energy" class="fill e"></div></div></div>
+    <div class="bar"><span>SANITY</span><div class="track"><div id="bar-sanity" class="fill s"></div></div></div>
+    <div class="bar"><span>CLOUT</span><div class="track"><div id="bar-clout" class="fill c"></div></div></div>
+    <div id="hud-status"></div>
+  </div>
+  <div id="hud-br">
+    <div id="hud-radio">RADIO <span id="radio-bars">·····</span></div>
+    <div id="hud-hint"></div>
+  </div>
+  <div id="prompt" class="hidden"></div>
+</div>
+
+<div id="toasts"></div>
+
+<div id="dialog" class="hidden">
+  <div id="dlg-name"></div>
+  <div id="dlg-text"></div>
+  <div id="dlg-choices"></div>
+  <div id="dlg-next">▼</div>
+</div>
+
+<div id="phone" class="hidden">
+  <div id="phone-head">
+    <span>☎ PHONE</span>
+    <span id="phone-close">[TAB] CLOSE</span>
+  </div>
+  <div id="phone-tabs"></div>
+  <div id="phone-body"></div>
+</div>
+
+<div id="fade"></div>
+
+<div id="title" class="screen">
+  <div class="title-wrap">
+    <div class="title-logo">OREGON HILL</div>
+    <div class="title-sub">a survival horror for the freelance creative</div>
+    <div id="title-menu" class="menu"></div>
+    <div class="title-foot">RICHMOND, VIRGINIA · EST. 1817 · RENT EST. YESTERDAY</div>
+  </div>
+</div>
+
+<div id="intro" class="screen hidden"><div id="intro-text"></div><div class="intro-skip">[ENTER / TAP] continue</div></div>
+
+<div id="ending" class="screen hidden">
+  <div class="ending-wrap">
+    <div id="end-title"></div>
+    <div id="end-text"></div>
+    <div id="end-stats"></div>
+    <div class="menu"><button id="end-again">PLAY AGAIN</button></div>
+  </div>
+</div>
+
+<div id="touch" class="hidden">
+  <div id="stick"><div id="knob"></div></div>
+  <div id="tbtns">
+    <button data-k="e">E</button>
+    <button data-k="attack">⚔</button>
+    <button data-k="run">RUN</button>
+    <button data-k="phone">☎</button>
+    <button data-k="light">🔦</button>
+  </div>
+</div>
+
+<div id="error" class="hidden"></div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
